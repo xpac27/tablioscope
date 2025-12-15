@@ -103,8 +103,13 @@ class TabRenderer
 
       lines = Array.new(6) { +"" }
       num_line = +""
+
       tuplet_line = +""
+      pm_line = +""
+      lr_line = +""
       any_tuplets = false
+      any_pm = false
+      any_lr = false
 
       chunk.each do |u|
         m = u.measure
@@ -112,19 +117,28 @@ class TabRenderer
         sep_left = u.repeat_start ? "|:" : "| "
         sep_right = u.repeat_end ? ":|" : "| "
 
-        rendered, tuplet_annot = render_measure(m)
-        width = rendered.map(&:length).max
+        rendered, ann = render_measure(m)
+        tuplet_annot = ann[:tuplet]
+        pm_annot = ann[:pm]
+        lr_annot = ann[:lr]
 
+        width = rendered.map(&:length).max
         rendered.map! { |s| s.ljust(width, '-') }
+
         tuplet_annot = tuplet_annot.ljust(width, ' ')
+        pm_annot     = pm_annot.ljust(width, ' ')
+        lr_annot     = lr_annot.ljust(width, ' ')
+
         any_tuplets ||= (tuplet_annot.strip.length > 0)
+        any_pm      ||= (pm_annot.strip.length > 0)
+        any_lr      ||= (lr_annot.strip.length > 0)
 
         measure_box_width = SEPARATOR_WIDTH + width + SEPARATOR_WIDTH
         num_line << Util.center_text((m.measure_index + 1).to_s, measure_box_width)
 
-        tuplet_line << sep_left.ljust(SEPARATOR_WIDTH)
-        tuplet_line << tuplet_annot
-        tuplet_line << sep_right.ljust(SEPARATOR_WIDTH)
+        tuplet_line << sep_left.ljust(SEPARATOR_WIDTH) << tuplet_annot << sep_right.ljust(SEPARATOR_WIDTH)
+        pm_line     << sep_left.ljust(SEPARATOR_WIDTH) << pm_annot     << sep_right.ljust(SEPARATOR_WIDTH)
+        lr_line     << sep_left.ljust(SEPARATOR_WIDTH) << lr_annot     << sep_right.ljust(SEPARATOR_WIDTH)
 
         6.times do |si|
           lines[si] << sep_left.ljust(SEPARATOR_WIDTH)
@@ -137,6 +151,8 @@ class TabRenderer
           num_line << " x#{rb.count}"
           pad = 3 + rb.count.to_s.length
           tuplet_line << (' ' * pad)
+          pm_line << (' ' * pad)
+          lr_line << (' ' * pad)
           lines.map! { |ln| ln + (' ' * pad) }
         end
       end
@@ -144,6 +160,8 @@ class TabRenderer
       prefix_width = @string_names.map(&:length).max
       out << num_line
       out << (" " * prefix_width + tuplet_line) if any_tuplets
+      out << (" " * prefix_width + pm_line)     if any_pm
+      out << (" " * prefix_width + lr_line)     if any_lr
       6.times do |si|
         out << format("%-#{prefix_width}s%s", @string_names[si], lines[si])
       end
@@ -155,14 +173,15 @@ class TabRenderer
 
   private
 
-  # Now returns [lines6, tuplet_annotation_line]
+  # Returns [lines6, {tuplet:, pm:, lr:}]
   def render_measure(m)
     sig = m.signature
     beats = m.beats
 
     if beats.nil? || beats.empty? || m.raw.dig('voices', 0, 'rest')
       cols = Util.duration_to_cols(Util.measure_total_duration(sig))
-      return [Array.new(6) { '-' * cols }, ' ' * cols]
+      blank = ' ' * cols
+      return [Array.new(6) { '-' * cols }, { tuplet: blank, pm: blank, lr: blank }]
     end
 
     total_needed = Util.measure_total_duration(sig)
@@ -195,7 +214,6 @@ class TabRenderer
 
     lines = Array.new(6) { +"" }
 
-    # Track beat column spans so we can draw tuplet brackets
     beat_spans = [] # {start:, stop:, beat:}
     cur_col = 0
 
@@ -219,9 +237,13 @@ class TabRenderer
     end
 
     tuplet_annot = build_tuplet_annotation(beat_spans, cur_col)
-    [lines, tuplet_annot]
+    pm_annot     = build_pm_annotation(beat_spans, cur_col)
+    lr_annot     = build_let_ring_annotation(beat_spans, cur_col)
+
+    [lines, { tuplet: tuplet_annot, pm: pm_annot, lr: lr_annot }]
   end
 
+  # Classic "rail" style: ----3----
   def build_tuplet_annotation(beat_spans, total_cols)
     line = Array.new(total_cols, ' ')
     i = 0
@@ -258,22 +280,18 @@ class TabRenderer
       span_stop = [span_stop, total_cols].min
       span_len = span_stop - span_start
 
-      # Need enough room to draw something meaningful
       if span_len >= 3
-        # Draw a horizontal rail. Leave one space margin if possible so it doesn't "kiss" barlines.
         rail_start = span_start
-        rail_stop  = span_stop
-
+        rail_stop = span_stop
         if rail_stop - rail_start >= 5
           rail_start += 1
-          rail_stop  -= 1
+          rail_stop -= 1
         end
 
         (rail_start...rail_stop).each do |pos|
-          line[pos] = '-'
+          line[pos] = '-' if pos >= 0 && pos < total_cols
         end
 
-        # Place the tuplet number centered on the rail, replacing dashes.
         num = t.to_s
         num_pos = rail_start + ((rail_stop - rail_start) / 2) - (num.length / 2)
         num_pos = [[num_pos, rail_start].max, rail_stop - num.length].min
@@ -285,6 +303,60 @@ class TabRenderer
       end
 
       i = end_i + 1
+    end
+
+    line.join
+  end
+
+  # PM------ (with rails across palm-muted beats)
+  def build_pm_annotation(beat_spans, total_cols)
+    line = Array.new(total_cols, ' ')
+    any = false
+
+    beat_spans.each do |s|
+      b = s[:beat]
+      next unless b['palmMute']
+      any = true
+      (s[:start]...s[:stop]).each do |pos|
+        line[pos] = '-' if pos >= 0 && pos < total_cols
+      end
+    end
+
+    return ' ' * total_cols unless any
+
+    first = line.index('-') || 0
+    line[first] = 'P' if first < total_cols
+    line[first + 1] = 'M' if (first + 1) < total_cols
+
+    line.join
+  end
+
+  # let ring~~~~~ (text at first span + rails across let-ring beats)
+  def build_let_ring_annotation(beat_spans, total_cols)
+    line = Array.new(total_cols, ' ')
+    any = false
+
+    beat_spans.each do |s|
+      b = s[:beat]
+      next unless b['letRing']
+      any = true
+      (s[:start]...s[:stop]).each do |pos|
+        line[pos] = '~' if pos >= 0 && pos < total_cols
+      end
+    end
+
+    return ' ' * total_cols unless any
+
+    first = line.index('~') || 0
+    text = 'let ring'
+    # Try to place it starting at the first span; if it doesn't fit, shift left to fit.
+    start_pos = [first, total_cols - text.length].min
+    start_pos = 0 if start_pos < 0
+
+    text.chars.each_with_index do |ch, k|
+      pos = start_pos + k
+      break if pos >= total_cols
+      line[pos] = ch
     end
 
     line.join
@@ -396,7 +468,6 @@ measures = raw_measures.map.with_index do |m, idx|
   voice0 = (m['voices'] || [])[0] || {}
   beats = voice0['beats'] || []
 
-  # IMPORTANT: canon should ignore marker/metadata; build from rendered musical content.
   canon_obj = {
     'signature' => current_sig,
     'voice_rest' => !!voice0['rest'],
@@ -406,9 +477,9 @@ measures = raw_measures.map.with_index do |m, idx|
         'rest' => !!b['rest'],
         'palmMute' => !!b['palmMute'],
         'letRing' => !!b['letRing'],
-        'tuplet' => b['tuplet'],                 # include tuplet in canon (affects rendering line)
-        'tupletStart' => !!b['tupletStart'],     # include if present
-        'tupletStop' => !!b['tupletStop'],       # include if present
+        'tuplet' => b['tuplet'],
+        'tupletStart' => !!b['tupletStart'],
+        'tupletStop' => !!b['tupletStop'],
         'notes' => (b['notes'] || []).map do |n|
           {
             'string' => n['string'],

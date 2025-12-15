@@ -218,6 +218,5 @@ With repeats:
 ## Limitations / Future Work
 
 * Only one voice per measure is supported
-* Palm-mute / let-ring are parsed but not visually rendered
 * No chord-name rendering yet
 * No support for bends or vibrato notation (could be added)
