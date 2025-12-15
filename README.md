@@ -1,6 +1,6 @@
 # JSON → ASCII Guitar Tab Renderer
 
-This Ruby script converts a guitar tab expressed in a structured JSON format into a readable **ASCII guitar tab**, following classic tabbing conventions.
+This Ruby script converts a guitar tab expressed in a structured JSON format into a readable **ASCII guitar tab**, inspired by classic tabbing conventions (see classtab.org).
 
 It is designed for **machine-generated tabs** (e.g. Songsterr-like exports) and focuses on:
 
@@ -15,68 +15,81 @@ It is designed for **machine-generated tabs** (e.g. Songsterr-like exports) and 
 
 ### 🎸 Guitar-oriented ASCII tab
 
-* 6-string guitar output
-* Classic ASCII layout (`|----|`)
-* Configurable tuning (via MIDI note numbers)
-* String labels derived automatically from tuning
+* 6-string ASCII output with barlines
+* String labels derived from tuning (no octave by default)
+* Classic symbols for common techniques
 
 ### 🧮 Rhythm & structure
 
 * Enforces **exact time-signature fill** per measure
   (pads with rests if a measure is short)
-* Supports:
-
-  * rests
-  * dead notes (`x`)
-  * ghost notes (`(5)`)
-  * ties (`~`)
-  * slides (`/`)
 * Measures are numbered above the tab
+* Wraps output after *N rendered measures per line* (default: 8)
 
 ### 🔁 Repeat compression
 
 * Detects **repeated measure sequences up to 16 measures**
 * Greedy detection (longest repeats first)
-* Outputs compact repeats using:
+* Renders compact repeats using:
 
   ```
   |: ... :| xN
   ```
-* Nested repeats supported
 * Automatically starts a new line after a repeat ends
 
 ### 🎼 Tuplets
 
-* Supports tuplets via the `tuplet` field in JSON
-* Uses **classic tab notation**:
+* Supports tuplets via the `tuplet` beat field
+* Renders **classic rail style** above the tab:
 
   ```
-      ---3---
+      ----3----
   ```
-* Tuplets can be defined using:
+* Tuplet groups can be defined using:
 
   * `tupletStart` / `tupletStop`, or
   * consecutive beats with the same `tuplet` value
-* Tuplet annotations appear above the tab lines
 
-### 📐 Layout
+### 🤫 Palm mute / Let ring
 
-* Wraps output after *N measures per line* (default: 8)
-* Configurable via CLI
-* Keeps all alignment stable even with annotations
+Rendered as dedicated annotation lines above the strings:
+
+* Palm mute (rail with leading `PM`):
+
+  ```
+  PM--------
+  ```
+
+* Let ring (text at first span + `~` rail):
+
+  ```
+  let ring~~~~~~~
+  ```
+
+### 🔗 Ties (sustain)
+
+`tie: true` means the note is tied to the **previous** note (same string).
+
+The renderer draws sustain by replacing the entire gap between the previous note and the tied note with `=`:
+
+```
+5====5
+```
+
+This is **continuous sustain**, not just a small prefix marker.
 
 ---
 
 ## Usage
 
 ```bash
-ruby json_to_ascii_tab.rb --json input.json
+ruby tab_decode.rb --json input.json
 ```
 
-Optional parameters:
+Options:
 
 ```bash
---per-line N    # number of measures per line (default: 8)
+--per-line N    # number of rendered measures per line (default: 8)
 ```
 
 ---
@@ -92,75 +105,94 @@ Optional parameters:
 }
 ```
 
-### Tuning
+* `tuning` is optional. If missing or invalid, standard tuning is used.
 
-* Array of **6 MIDI note numbers**
-* Order: **string 1 → string 6 (high → low)**
-* Example:
+---
 
-| MIDI | Note |
-| ---: | ---- |
-|   59 | B3   |
-|   54 | F#3  |
-|   50 | D3   |
-|   45 | A2   |
-|   40 | E2   |
-|   35 | B1   |
+## Tuning
 
-Rendered string labels:
+* `tuning` is an array of **6 MIDI note numbers**
+* Order is **string 1 → string 6 (high → low)**
+
+Example:
+
+```json
+"tuning": [59, 54, 50, 45, 40, 35]
+```
+
+Which corresponds to:
+
+```
+B3 – F#3 – D3 – A2 – E2 – B1
+```
+
+The tab margin prints note names (no octave by default), e.g.:
 
 ```
 B F# D A E B
 ```
 
-If `tuning` is missing or invalid, standard tuning is used.
-
 ---
 
-## Measure format
+## Measures
 
 ```json
 {
   "signature": [4, 4],
   "voices": [
     {
+      "rest": false,
       "beats": [ ... ]
     }
-  ]
+  ],
+  "marker": { "text": "Verse", "width": 123 }
 }
 ```
 
 * `signature` applies to this and following measures until changed
 * Only `voices[0]` is used (one measure = one voice)
+* `voices[0].rest: true` means a full-measure rest
+* `marker.text` (if present) is printed before the chunk
 
 ---
 
-## Beat format
+## Beats
 
 ```json
 {
-  "duration": [1, 16],
+  "notes": [ ... ],
   "type": 16,
+  "duration": [1, 16],
+  "dots": 0,
+  "rest": false,
+
   "tuplet": 3,
   "tupletStart": true,
-  "notes": [ ... ]
+  "tupletStop": false,
+
+  "beamStart": true,
+  "beamStop": false,
+
+  "palmMute": true,
+  "letRing": false
 }
 ```
 
 ### Beat fields
 
-| Field                        | Meaning                                  |
-| ---------------------------- | ---------------------------------------- |
-| `duration`                   | Fraction of a whole note (e.g. `[1,16]`) |
-| `type`                       | Note type (4, 8, 16, …)                  |
-| `rest`                       | Silence                                  |
-| `tuplet`                     | Tuplet size (e.g. `3` for triplet)       |
-| `tupletStart` / `tupletStop` | Explicit tuplet boundaries               |
-| `palmMute`, `letRing`        | Parsed (not visually rendered yet)       |
+| Field                        | Meaning                                                |
+| ---------------------------- | ------------------------------------------------------ |
+| `duration`                   | Fraction of a whole note (e.g. `[1,16]`)               |
+| `type`                       | Note type hint (4, 8, 16, …)                           |
+| `rest`                       | Silence for this beat                                  |
+| `tuplet`                     | Tuplet size (e.g. `3` for triplet)                     |
+| `tupletStart` / `tupletStop` | Explicit tuplet boundaries                             |
+| `palmMute`                   | Marks this beat as palm-muted (renders on PM line)     |
+| `letRing`                    | Marks this beat as let-ring (renders on let ring line) |
 
 ---
 
-## Note format
+## Notes
 
 ```json
 {
@@ -169,36 +201,49 @@ If `tuning` is missing or invalid, standard tuning is used.
   "tie": true,
   "ghost": false,
   "dead": false,
-  "hp": true,
-  "slide": "shift"
+  "hp": false,
+  "slide": "shift",
+  "rest": false
 }
 ```
 
-| Field            | Effect in tab                   |
-| ---------------- | ------------------------------- |
-| `string`         | 0 = high string, 5 = low string |
-| `fret`           | Printed as number               |
-| `dead`           | `x`                             |
-| `ghost`          | `(5)`                           |
-| `tie`            | `~`                             |
-| `hp`             | Hammer-on / pull-off            |
-| `slide: "shift"` | `/`                             |
+### Note fields
+
+| Field            | Effect in tab                                     |
+| ---------------- | ------------------------------------------------- |
+| `string`         | 0 = high string, 5 = low string                   |
+| `fret`           | Printed as a number                               |
+| `dead`           | `x`                                               |
+| `ghost`          | `(5)`                                             |
+| `tie`            | Tied to **previous** note → gap rendered with `=` |
+| `slide: "shift"` | `/`                                               |
+| `rest`           | Note-level silence                                |
 
 ---
 
-## Example Output
+## Example Output (illustrative)
+
+Tuplet + palm mute + let ring:
 
 ```
-        ---3---
-e |---5-7-8---|
-B |-----------|
-G |-----------|
-D |-----------|
-A |-----------|
-E |-----------|
+           ----3----
+           PM--------
+           let ring~~~~~~~
+e |---5-7-8-----------|
+B |-------------------|
+G |-------------------|
+D |-------------------|
+A |-------------------|
+E |-------------------|
 ```
 
-With repeats:
+Tie sustain:
+
+```
+e |---5====5----------|
+```
+
+Repeat compression:
 
 ```
 |: ---- ---- ---- ---- :| x4
@@ -208,15 +253,16 @@ With repeats:
 
 ## Design Notes
 
-* Repeat detection works on **canonical musical content**, not metadata
-* Markers, layout hints, and annotations do **not** affect repeat matching
-* Tuplets are rendered purely as annotations and do not affect timing
-* Output is fully ASCII and suitable for terminals, diffs, and version control
+* Repeat detection operates on **canonical musical content**, not metadata
+* Markers and other non-musical fields do **not** affect repeat matching
+* Tuplets / PM / let ring are rendered as annotation lines above the tab
+* Output is ASCII and suitable for terminals, diffs, and version control
 
 ---
 
 ## Limitations / Future Work
 
-* Only one voice per measure is supported
-* No chord-name rendering yet
-* No support for bends or vibrato notation (could be added)
+* Only one voice per measure is supported (`voices[0]`)
+* Hammer-on/pull-off markers are not currently rendered
+* Beaming is not rendered (it can be added as an annotation line if desired)
+* Ties are currently rendered **within a measure**; cross-measure ties would require carrying state across measures
