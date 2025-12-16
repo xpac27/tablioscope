@@ -1,4 +1,7 @@
 {
+  "name": "Example Track",
+  "partId": 0,
+  "instrument": "Overdriven Guitar",
   "tuning": [64, 59, 55, 50, 45, 40],
   "automations": {
     "tempo": [

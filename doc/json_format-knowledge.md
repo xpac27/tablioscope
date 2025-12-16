@@ -15,6 +15,9 @@ The format is optimized for:
 
 ```json
 {
+  "name": "Example Track",
+  "partId": 0,
+  "instrument": "Overdriven Guitar",
   "automations": { "tempo": [ ... ] },
   "tuning": [59, 54, 50, 45, 40, 35],
   "measures": [ ... ]
@@ -25,6 +28,9 @@ The format is optimized for:
 
 | Field        | Type           | Required | Description                                    |
 | ------------ | -------------- | -------- | ---------------------------------------------- |
+| `name`       | string         | optional | Name of the part/track (used in header)        |
+| `partId`     | int            | optional | Part index (used in header)                    |
+| `instrument` | string         | optional | Instrument name (used in header)               |
 | `automations`| object         | optional | Automation lanes (tempo supported)             |
 | `tuning`     | array[int]     | optional | Guitar tuning expressed as 6 MIDI note numbers |
 | `measures`   | array[measure] | required | Ordered list of measures                       |
@@ -82,6 +88,18 @@ Notes:
 * Entries with `position` other than `0` are ignored by the renderer.
 * Multiple tempo changes in one measure are deduped by their BPM for display.
 * Other automation lanes are currently ignored.
+
+---
+
+## Metadata Header
+
+If `instrument`, `partId`, or `name` are present, a header line is printed above the tab:
+
+```
+# Overdriven Guitar (part 0) - Example Track
+```
+
+Fields are optional; missing values are skipped.
 
 ---
 
