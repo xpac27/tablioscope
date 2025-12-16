@@ -1,225 +1,270 @@
-1) Minimal JSON example covering every feature
+# JSON → ASCII Guitar Tab Renderer
 
+This Ruby script converts a guitar tab expressed in a structured JSON format into a readable **ASCII guitar tab**, inspired by classic tabbing conventions (see classtab.org).
+
+It is designed for **machine-generated tabs** (e.g. Songsterr-like exports) and focuses on:
+
+* musical correctness
+* stable alignment
+* compact output (repeat compression)
+* readability in plain text
+
+---
+
+## Features
+
+### 🎸 Guitar-oriented ASCII tab
+
+* 6-string ASCII output with barlines
+* String labels derived from tuning (no octave by default)
+* Classic symbols for common techniques
+
+### 🧮 Rhythm & structure
+
+* Enforces **exact time-signature fill** per measure
+  (pads with rests if a measure is short)
+* Measures are numbered above the tab
+* Wraps output after *N rendered measures per line* (default: 8)
+
+### 🔁 Repeat compression
+
+* Detects **repeated measure sequences up to 16 measures**
+* Greedy detection (longest repeats first)
+* Renders compact repeats using:
+
+  ```
+  |: ... :| xN
+  ```
+* Automatically starts a new line after a repeat ends
+
+### 🎼 Tuplets
+
+* Supports tuplets via the `tuplet` beat field
+* Renders **classic rail style** above the tab:
+
+  ```
+      ----3----
+  ```
+* Tuplet groups can be defined using:
+
+  * `tupletStart` / `tupletStop`, or
+  * consecutive beats with the same `tuplet` value
+
+### 🤫 Palm mute / Let ring
+
+Rendered as dedicated annotation lines above the strings:
+
+* Palm mute (rail with leading `PM`):
+
+  ```
+  PM--------
+  ```
+
+* Let ring (text at first span + `~` rail):
+
+  ```
+  let ring~~~~~~~
+  ```
+
+### 🔗 Ties (sustain)
+
+`tie: true` means the note is tied to the **previous** note (same string).
+
+The renderer draws sustain by replacing the entire gap between the previous note and the tied note with `=`:
+
+```
+5====5
+```
+
+This is **continuous sustain**, not just a small prefix marker.
+
+---
+
+## Usage
+
+```bash
+ruby tab_decode.rb --json input.json
+```
+
+Options:
+
+```bash
+--per-line N    # number of rendered measures per line (default: 8)
+```
+
+---
+
+## JSON Input Format
+
+### Top-level structure
+
+```json
 {
-  "tuning": [64, 59, 55, 50, 45, 40],
-  "measures": [
-    {
-      "signature": [4, 4],
-      "marker": { "text": "Demo: tuplets, PM, let ring, tie" },
-      "voices": [
-        {
-          "beats": [
-            {
-              "duration": [1, 8],
-              "palmMute": true,
-              "notes": [{ "string": 5, "fret": 0 }]
-            },
-
-            {
-              "duration": [1, 12],
-              "type": 16,
-              "tuplet": 3,
-              "tupletStart": true,
-              "letRing": true,
-              "notes": [{ "string": 4, "fret": 3 }]
-            },
-            {
-              "duration": [1, 12],
-              "type": 16,
-              "tuplet": 3,
-              "letRing": true,
-              "notes": [{ "string": 4, "fret": 3, "tie": true }]
-            },
-            {
-              "duration": [1, 12],
-              "type": 16,
-              "tuplet": 3,
-              "tupletStop": true,
-              "letRing": true,
-              "notes": [{ "string": 4, "fret": 3, "tie": true }]
-            },
-
-            {
-              "duration": [1, 8],
-              "rest": true,
-              "notes": [{ "rest": true }]
-            },
-
-            {
-              "duration": [1, 4],
-              "notes": [
-                { "string": 3, "fret": 2, "ghost": true },
-                { "string": 2, "fret": 2 },
-                { "string": 1, "fret": 2 },
-                { "string": 0, "fret": 2 }
-              ]
-            },
-
-            {
-              "duration": [1, 4],
-              "notes": [{ "string": 5, "dead": true }]
-            }
-          ]
-        }
-      ]
-    },
-
-    {
-      "voices": [
-        {
-          "beats": [
-            { "duration": [1, 4], "notes": [{ "string": 5, "fret": 0 }] },
-            { "duration": [1, 4], "notes": [{ "string": 5, "fret": 0, "tie": true }] },
-            { "duration": [1, 4], "notes": [{ "string": 5, "fret": 0, "tie": true }] },
-            { "duration": [1, 4], "notes": [{ "string": 5, "fret": 0, "tie": true }] }
-          ]
-        }
-      ]
-    }
-  ]
+  "tuning": [59, 54, 50, 45, 40, 35],
+  "measures": [ ... ]
 }
+```
 
-What this demonstrates:
-	•	tuning (MIDI)
-	•	signature + marker
-	•	palmMute + letRing rails
-	•	triplet tuplet with start/stop
-	•	tie-to-previous with sustain ====
-	•	rest beat
-	•	chord (multiple notes at once)
-	•	ghost note (2)
-	•	dead note x
+* `tuning` is optional. If missing or invalid, standard tuning is used.
 
-⸻
+---
 
-2) JSON Schema (draft, pragmatic)
+## Tuning
 
+* `tuning` is an array of **6 MIDI note numbers**
+* Order is **string 1 → string 6 (high → low)**
+
+Example:
+
+```json
+"tuning": [59, 54, 50, 45, 40, 35]
+```
+
+Which corresponds to:
+
+```
+B3 – F#3 – D3 – A2 – E2 – B1
+```
+
+The tab margin prints note names (no octave by default), e.g.:
+
+```
+B F# D A E B
+```
+
+---
+
+## Measures
+
+```json
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "GuitarTab",
-  "type": "object",
-  "required": ["measures"],
-  "properties": {
-    "tuning": {
-      "type": "array",
-      "description": "6 MIDI note numbers, string 1 -> 6 (high -> low)",
-      "items": { "type": "integer" },
-      "minItems": 6,
-      "maxItems": 6
-    },
-    "measures": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/measure" }
+  "signature": [4, 4],
+  "voices": [
+    {
+      "rest": false,
+      "beats": [ ... ]
     }
-  },
-  "$defs": {
-    "measure": {
-      "type": "object",
-      "required": ["voices"],
-      "properties": {
-        "signature": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "items": { "type": "integer" }
-        },
-        "marker": {
-          "type": "object",
-          "properties": {
-            "text": { "type": "string" },
-            "width": { "type": "number" }
-          },
-          "additionalProperties": true
-        },
-        "voices": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/voice" }
-        }
-      },
-      "additionalProperties": true
-    },
-    "voice": {
-      "type": "object",
-      "properties": {
-        "rest": { "type": "boolean" },
-        "beats": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/beat" }
-        }
-      },
-      "additionalProperties": true
-    },
-    "beat": {
-      "type": "object",
-      "required": ["duration"],
-      "properties": {
-        "notes": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/note" }
-        },
-        "duration": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "items": { "type": "integer" }
-        },
-        "type": { "type": "integer" },
-        "dots": { "type": "integer" },
-        "rest": { "type": "boolean" },
-
-        "tuplet": { "type": "integer" },
-        "tupletStart": { "type": "boolean" },
-        "tupletStop": { "type": "boolean" },
-
-        "beamStart": { "type": "boolean" },
-        "beamStop": { "type": "boolean" },
-
-        "palmMute": { "type": "boolean" },
-        "letRing": { "type": "boolean" }
-      },
-      "additionalProperties": true
-    },
-    "note": {
-      "type": "object",
-      "properties": {
-        "string": { "type": "integer", "minimum": 0, "maximum": 5 },
-        "fret": { "type": "integer", "minimum": 0 },
-        "rest": { "type": "boolean" },
-
-        "tie": {
-          "type": "boolean",
-          "description": "Tie to PREVIOUS note (render sustain gap with '=')"
-        },
-        "hp": { "type": "boolean" },
-        "slide": { "type": "string" },
-
-        "ghost": { "type": "boolean" },
-        "dead": { "type": "boolean" }
-      },
-      "additionalProperties": true
-    }
-  }
+  ],
+  "marker": { "text": "Verse", "width": 123 }
 }
+```
 
+* `signature` applies to this and following measures until changed
+* Only `voices[0]` is used (one measure = one voice)
+* `voices[0].rest: true` means a full-measure rest
+* `marker.text` (if present) is printed before the chunk
 
-⸻
+---
 
-3) Test corpus ideas (small but effective)
+## Beats
 
-Use these as separate JSON files to validate the renderer:
-	1.	Exact signature fill + padding
-	•	Provide a 4/4 measure with only 3 beats worth of duration
-	•	Expect renderer to pad with rests to complete the measure.
-	2.	Repeat compression correctness
-	•	Construct 16 measures identical, repeated 4 times
-	•	Follow with a 4-measure phrase repeated 4 times
-	•	Ensure output becomes |: ... :| x4 for both blocks (no “lonely first measure”).
-	3.	Tuplets + PM + letRing + ties interaction
-	•	A tuplet group where:
-	•	beats have palmMute: true
-	•	notes have tie: true to previous
-	•	letRing: true overlaps later beats
-	•	Validate:
-	•	tuplet rail aligns with the correct span
-	•	PM rail and let ring text appear at first spans
-	•	sustain = paints only between tied notes and doesn’t overwrite note tokens.
+```json
+{
+  "notes": [ ... ],
+  "type": 16,
+  "duration": [1, 16],
+  "dots": 0,
+  "rest": false,
+
+  "tuplet": 3,
+  "tupletStart": true,
+  "tupletStop": false,
+
+  "beamStart": true,
+  "beamStop": false,
+
+  "palmMute": true,
+  "letRing": false
+}
+```
+
+### Beat fields
+
+| Field                        | Meaning                                                |
+| ---------------------------- | ------------------------------------------------------ |
+| `duration`                   | Fraction of a whole note (e.g. `[1,16]`)               |
+| `type`                       | Note type hint (4, 8, 16, …)                           |
+| `rest`                       | Silence for this beat                                  |
+| `tuplet`                     | Tuplet size (e.g. `3` for triplet)                     |
+| `tupletStart` / `tupletStop` | Explicit tuplet boundaries                             |
+| `palmMute`                   | Marks this beat as palm-muted (renders on PM line)     |
+| `letRing`                    | Marks this beat as let-ring (renders on let ring line) |
+
+---
+
+## Notes
+
+```json
+{
+  "string": 0,
+  "fret": 5,
+  "tie": true,
+  "ghost": false,
+  "dead": false,
+  "hp": false,
+  "slide": "shift",
+  "rest": false
+}
+```
+
+### Note fields
+
+| Field            | Effect in tab                                     |
+| ---------------- | ------------------------------------------------- |
+| `string`         | 0 = high string, 5 = low string                   |
+| `fret`           | Printed as a number                               |
+| `dead`           | `x`                                               |
+| `ghost`          | `(5)`                                             |
+| `tie`            | Tied to **previous** note → gap rendered with `=` |
+| `slide: "shift"` | `/`                                               |
+| `rest`           | Note-level silence                                |
+
+---
+
+## Example Output (illustrative)
+
+Tuplet + palm mute + let ring:
+
+```
+           ----3----
+           PM--------
+           let ring~~~~~~~
+e |---5-7-8-----------|
+B |-------------------|
+G |-------------------|
+D |-------------------|
+A |-------------------|
+E |-------------------|
+```
+
+Tie sustain:
+
+```
+e |---5====5----------|
+```
+
+Repeat compression:
+
+```
+|: ---- ---- ---- ---- :| x4
+```
+
+---
+
+## Design Notes
+
+* Repeat detection operates on **canonical musical content**, not metadata
+* Markers and other non-musical fields do **not** affect repeat matching
+* Tuplets / PM / let ring are rendered as annotation lines above the tab
+* Output is ASCII and suitable for terminals, diffs, and version control
+
+---
+
+## Limitations / Future Work
+
+* Only one voice per measure is supported (`voices[0]`)
+* Hammer-on/pull-off markers are not currently rendered
+* Beaming is not rendered (it can be added as an annotation line if desired)
+* Ties are currently rendered **within a measure**; cross-measure ties would require carrying state across measures
+
+---
