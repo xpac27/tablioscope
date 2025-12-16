@@ -4,6 +4,9 @@
   "type": "object",
   "required": ["measures"],
   "properties": {
+    "name": { "type": "string" },
+    "partId": { "type": "integer" },
+    "instrument": { "type": "string" },
     "automations": {
       "type": "object",
       "properties": {

@@ -13,6 +13,7 @@ class TempoLabelAlignmentTest < Minitest::Test
     assert status.success?, "renderer failed: #{stderr}"
 
     expected = <<~'OUT'.split("\n")
+# Overdriven Guitar (part 0) - Example Track
 # Demo: tuplets, PM, let ring, tie
                      Tempo 120
                          1                                                   2

@@ -26,6 +26,7 @@ It is designed for **machine-generated tabs** (e.g. Songsterr-like exports) and 
 * Measures are numbered above the tab
 * **Tempo changes** at measure starts render as labels above the tab
 * Wraps output after *N rendered measures per line* (default: 8)
+* Prints an optional **metadata header** from instrument/part/name
 
 ### 🔁 Repeat compression
 
@@ -101,12 +102,16 @@ Options:
 
 ```json
 {
+  "name": "Example Track",
+  "partId": 0,
+  "instrument": "Overdriven Guitar",
   "automations": { "tempo": [ ... ] },
   "tuning": [59, 54, 50, 45, 40, 35],
   "measures": [ ... ]
 }
 ```
 
+* `name`, `partId`, `instrument` are optional; if present, a header like `# Overdriven Guitar (part 0) - Example Track` is printed above the tab.
 * `tuning` is optional. If missing or invalid, standard tuning is used.
 * `automations.tempo` (optional) holds tempo changes at **measure starts** (see below).
 

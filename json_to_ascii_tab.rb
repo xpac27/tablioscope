@@ -73,17 +73,20 @@ module Util
 end
 
 class TabRenderer
-  def initialize(measures, measures_per_line: 8, string_names:)
+  def initialize(measures, measures_per_line: 8, string_names:, header_text: nil)
     @measures = measures
     @measures_per_line = measures_per_line
     @string_names = string_names
+    @header_text = header_text
   end
 
   def render
+    out = []
+    out << @header_text if @header_text
+
     blocks = detect_repeats(@measures, max_len: 16)
     units = build_units(@measures, blocks)
 
-    out = []
     chunks = []
     cur = []
 
@@ -509,6 +512,20 @@ tuning = json['tuning']
 tuning = DEFAULT_TUNING_MIDI if !tuning.is_a?(Array) || tuning.length != 6
 string_names = tuning.map { |m| Util.midi_to_note_name(m, with_octave: false) }
 
+instrument = json['instrument'].to_s.strip
+part_id = json['partId']
+name = json['name'].to_s.strip
+part_label = part_id.nil? ? nil : "(part #{part_id})"
+
+header_bits = []
+unless instrument.empty? && part_label.nil?
+  inst = instrument.empty? ? nil : instrument
+  inst = [inst, part_label].compact.join(' ')
+  header_bits << inst unless inst.empty?
+end
+header_bits << name unless name.empty?
+header_text = header_bits.empty? ? nil : "# #{header_bits.join(' - ')}"
+
 tempo_markers_by_measure = Hash.new { |h, k| h[k] = [] }
 json.dig('automations', 'tempo').to_a.each do |entry|
   next unless entry.is_a?(Hash)
@@ -571,4 +588,11 @@ measures = raw_measures.map.with_index do |m, idx|
   )
 end
 
-puts TabRenderer.new(measures, measures_per_line: options[:per_line], string_names: string_names).render
+renderer = TabRenderer.new(
+  measures,
+  measures_per_line: options[:per_line],
+  string_names: string_names,
+  header_text: header_text
+)
+
+puts renderer.render
