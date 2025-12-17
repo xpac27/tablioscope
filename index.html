@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Visualiseur de partitions AlphaTab</title>
+    <title>AlphaTab Score Viewer</title>
     <style>
       :root {
         color-scheme: light dark;
@@ -115,32 +115,32 @@
       });
 
       api.renderStarted.on(() => {
-        status.textContent = 'Rendu de la partition en cours…';
+        status.textContent = 'Rendering score…';
       });
 
       api.renderFinished.on(() => {
-        status.textContent = 'Partition prête.';
+        status.textContent = 'Score ready.';
       });
 
       api.error.on((err) => {
         console.error(err);
-        status.textContent = "Impossible de lire ce fichier. Vérifiez son format.";
+        status.textContent = "Unable to read this file. Check its format.";
       });
 
       fileInput.addEventListener('change', (event) => {
         const file = event.target.files?.[0];
         if (!file) {
-          status.textContent = 'Aucun fichier sélectionné.';
+          status.textContent = 'No file selected.';
           return;
         }
 
-        status.textContent = `Chargement de "${file.name}"…`;
+        status.textContent = `Loading "${file.name}"…`;
         const reader = new FileReader();
 
         reader.onload = (loadEvent) => {
           const content = loadEvent.target?.result;
           if (!content) {
-            status.textContent = 'Le fichier est vide ou illisible.';
+            status.textContent = 'The file is empty or unreadable.';
             return;
           }
 
@@ -148,7 +148,7 @@
         };
 
         reader.onerror = () => {
-          status.textContent = "Lecture du fichier impossible.";
+          status.textContent = "Could not read the file.";
         };
 
         reader.readAsText(file);
