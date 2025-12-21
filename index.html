@@ -13,13 +13,12 @@
       body {
         margin: 0;
         padding: 0;
-        background: #0f172a;
-        color: #e2e8f0;
+        background: #ffffff;
+        color: #0f172a;
       }
 
       .page {
-        max-width: 1200px;
-        margin: 0 auto;
+        margin: 0;
         padding: 0 24px;
       }
 
@@ -27,78 +26,88 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-top: 16px;
-        margin-bottom: 16px;
+        margin: 0;
         flex-wrap: wrap;
-      }
-
-      .player {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 0 0 16px;
+        position: fixed;
+        left: 24px;
+        bottom: 24px;
+        z-index: 10;
         padding: 12px 16px;
-        background: rgba(30, 41, 59, 0.35);
-        border: 1px solid #1e293b;
-        border-radius: 12px;
+        border-radius: 999px;
+        background: #f7f1df;
+        box-shadow: 0 18px 40px rgba(120, 87, 32, 0.18);
+        border: 1px solid #ead9b7;
       }
 
-      .player button {
+      .controls [hidden] {
+        display: none !important;
+      }
+
+      .controls button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         border: none;
         border-radius: 10px;
         padding: 10px 14px;
         font-weight: 700;
         letter-spacing: 0.01em;
         cursor: pointer;
-        color: #0b1021;
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-        box-shadow: 0 10px 24px rgba(34, 197, 94, 0.3);
+        color: #2b1f0e;
+        background: linear-gradient(135deg, #f2e5c6, #fff4d6);
+        box-shadow: 0 8px 20px rgba(162, 116, 44, 0.25);
         transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
       }
 
-      .player button:disabled {
+      .controls button:disabled {
         cursor: progress;
         opacity: 0.6;
         filter: grayscale(0.4);
         box-shadow: none;
       }
 
-      .player button:not(:disabled):hover,
-      .player button:not(:disabled):focus-visible {
+      .controls button:not(:disabled):hover,
+      .controls button:not(:disabled):focus-visible {
         transform: translateY(-1px);
-        box-shadow: 0 14px 28px rgba(34, 197, 94, 0.35);
+        box-shadow: 0 12px 26px rgba(162, 116, 44, 0.3);
         filter: brightness(1.05);
+      }
+
+      .controls button svg {
+        width: 18px;
+        height: 18px;
+        display: block;
       }
 
       .player-status {
         margin: 0;
-        color: #cbd5e1;
+        color: #475569;
         font-size: 14px;
       }
 
       .player-time {
-        font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
-        font-size: 13px;
-        color: #a5b4fc;
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e293b;
         padding: 4px 8px;
         border-radius: 8px;
-        background: rgba(15, 23, 42, 0.7);
-        border: 1px solid #1e293b;
+        background: rgba(248, 250, 252, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.5);
       }
 
       .file-label {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: linear-gradient(135deg, #3b82f6, #06b6d4);
-        color: #0b1021;
+        background: linear-gradient(135deg, #f3e1b7, #fdf3d7);
+        color: #3d2b16;
         border: none;
         border-radius: 12px;
         padding: 12px 18px;
         font-weight: 700;
         letter-spacing: 0.01em;
         cursor: pointer;
-        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.35);
+        box-shadow: 0 8px 22px rgba(162, 116, 44, 0.25);
         transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
         text-decoration: none;
       }
@@ -106,13 +115,13 @@
       .file-label:hover,
       .file-label:focus-visible {
         transform: translateY(-1px);
-        box-shadow: 0 14px 36px rgba(6, 182, 212, 0.4);
+        box-shadow: 0 12px 26px rgba(162, 116, 44, 0.32);
         filter: brightness(1.05);
       }
 
       .file-label:active {
         transform: translateY(0);
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+        box-shadow: 0 6px 16px rgba(162, 116, 44, 0.22);
       }
 
       .print-button {
@@ -122,39 +131,59 @@
         font-weight: 700;
         letter-spacing: 0.01em;
         cursor: pointer;
-        color: #0b1021;
-        background: linear-gradient(135deg, #f97316, #facc15);
-        box-shadow: 0 10px 30px rgba(249, 115, 22, 0.35);
+        color: #3b2a10;
+        background: linear-gradient(135deg, #f7d28b, #ffe6b8);
+        box-shadow: 0 8px 22px rgba(209, 141, 44, 0.3);
         transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
       }
 
       .print-button:hover,
       .print-button:focus-visible {
         transform: translateY(-1px);
-        box-shadow: 0 14px 36px rgba(250, 204, 21, 0.4);
+        box-shadow: 0 12px 26px rgba(209, 141, 44, 0.35);
         filter: brightness(1.05);
       }
 
       .print-button:active {
         transform: translateY(0);
-        box-shadow: 0 8px 20px rgba(249, 115, 22, 0.25);
+        box-shadow: 0 6px 16px rgba(209, 141, 44, 0.22);
       }
 
       .status {
         margin: 0;
-        color: #a5b4fc;
+        color: #6b4c2a;
         font-size: 14px;
       }
 
+      #play-pause {
+        background: linear-gradient(135deg, #c7e9c0, #e4f7d9);
+        color: #1f3b23;
+        box-shadow: 0 8px 20px rgba(61, 153, 90, 0.28);
+      }
+
+      #play-pause:not(:disabled):hover,
+      #play-pause:not(:disabled):focus-visible {
+        box-shadow: 0 12px 26px rgba(61, 153, 90, 0.32);
+      }
+
+      #stop {
+        background: linear-gradient(135deg, #f2b8a3, #ffd8c4);
+        color: #5a2012;
+        box-shadow: 0 8px 20px rgba(186, 72, 34, 0.28);
+      }
+
+      #stop:not(:disabled):hover,
+      #stop:not(:disabled):focus-visible {
+        box-shadow: 0 12px 26px rgba(186, 72, 34, 0.32);
+      }
+
       .alpha-tab {
-        background: #ffffff;
-        border: 1px solid #1e293b;
-        border-radius: 16px;
-        padding: 16px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 10vh 0 50vh;
         min-height: 320px;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05),
-          0 18px 45px rgba(0, 0, 0, 0.35);
-        position: relative;
+        box-shadow: none;
         overflow: auto;
       }
 
@@ -181,6 +210,12 @@
         .page {
           padding: 0 16px;
         }
+
+        .controls {
+          left: 16px;
+          right: 16px;
+          border-radius: 24px;
+        }
       }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.7.1/dist/alphaTab.min.js "></script>
@@ -196,14 +231,15 @@
           hidden
         >
         <button class="print-button" id="print-button" type="button" hidden>Print</button>
-        <p class="status" id="status">Import a Guitar Pro, PowerTab, MusicXML or AlphaText file.</p>
-      </div>
-
-      <div class="player">
-        <button id="play-pause" disabled>Play</button>
-        <button id="stop" disabled>Stop</button>
+        <button id="stop" aria-label="Stop" disabled>
+          <svg viewBox="0 0 320 512" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M267.5 440.6c9.5 7.9 22.8 9.7 34.1 4.4s18.4-16.6 18.4-29l0-320c0-12.4-7.2-23.7-18.4-29s-24.5-3.6-34.1 4.4l-192 160L64 241 64 96c0-17.7-14.3-32-32-32S0 78.3 0 96L0 416c0 17.7 14.3 32 32 32s32-14.3 32-32l0-145 11.5 9.6 192 160z"></path>
+          </svg>
+        </button>
+        <button id="play-pause" aria-label="Play" disabled></button>
         <p class="player-status" id="player-status">Player loading…</p>
         <span class="player-time" id="player-time">00:00 / 00:00</span>
+        <p class="status" id="status">Import a Guitar Pro, PowerTab, MusicXML or AlphaText file.</p>
       </div>
 
       <div class="alpha-tab" id="alpha-tab"></div>
@@ -218,6 +254,19 @@
       const playerStatus = document.getElementById('player-status');
       const playerTime = document.getElementById('player-time');
       const printButton = document.getElementById('print-button');
+      const playIcon = `
+        <svg viewBox="0 0 384 512" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80L0 432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"></path>
+        </svg>
+      `;
+      const pauseIcon = `
+        <svg viewBox="0 0 320 512" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M48 64C21.5 64 0 85.5 0 112L0 400c0 26.5 21.5 48 48 48l32 0c26.5 0 48-21.5 48-48l0-288c0-26.5-21.5-48-48-48L48 64zm192 0c-26.5 0-48 21.5-48 48l0 288c0 26.5 21.5 48 48 48l32 0c26.5 0 48-21.5 48-48l0-288c0-26.5-21.5-48-48-48l-32 0z"></path>
+        </svg>
+      `;
+      playPauseButton.innerHTML = playIcon;
+      playerStatus.hidden = true;
+      playerTime.hidden = true;
 
       const api = new alphaTab.AlphaTabApi(alphaTabContainer, {
         player: {
@@ -229,32 +278,40 @@
 
       api.renderStarted.on(() => {
         status.textContent = 'Rendering score…';
+        status.hidden = false;
+        printButton.hidden = true;
+        playerTime.hidden = true;
       });
 
       api.renderFinished.on(() => {
-        status.textContent = 'Score ready.';
         printButton.hidden = false;
+        status.hidden = true;
+        playerTime.hidden = false;
       });
 
       api.error.on((err) => {
         console.error(err);
         status.textContent = "Unable to read this file. Check its format.";
+        status.hidden = false;
       });
 
-      api.soundFontLoad.on((evt) => {
-        const percent = Math.floor((evt.loaded / evt.total) * 100);
-        playerStatus.textContent = `Loading sounds: ${percent}%`;
-      });
+      if (api.soundFontLoadError) {
+        api.soundFontLoadError.on((err) => {
+          console.error(err);
+          playerStatus.textContent = 'Unable to load the player soundfont.';
+          playerStatus.hidden = false;
+        });
+      }
 
       api.playerReady.on(() => {
-        playerStatus.textContent = 'Player ready.';
         playPauseButton.disabled = false;
         stopButton.disabled = false;
       });
 
       api.playerStateChanged.on((evt) => {
         const isPlaying = evt.state === alphaTab.synth.PlayerState.Playing;
-        playPauseButton.textContent = isPlaying ? 'Pause' : 'Play';
+        playPauseButton.innerHTML = isPlaying ? pauseIcon : playIcon;
+        playPauseButton.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
       });
 
       function formatDuration(ms) {
@@ -291,16 +348,21 @@
         const file = event.target.files?.[0];
         if (!file) {
           status.textContent = 'No file selected.';
+          status.hidden = false;
           return;
         }
 
         status.textContent = `Loading "${file.name}"…`;
+        status.hidden = false;
+        printButton.hidden = true;
+        playerTime.hidden = true;
         const reader = new FileReader();
 
         reader.onload = (loadEvent) => {
           const content = loadEvent.target?.result;
           if (!content) {
             status.textContent = 'The file is empty or unreadable.';
+            status.hidden = false;
             return;
           }
 
@@ -309,6 +371,7 @@
 
         reader.onerror = () => {
           status.textContent = "Could not read the file.";
+          status.hidden = false;
         };
 
         reader.readAsText(file);
