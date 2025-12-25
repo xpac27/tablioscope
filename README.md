@@ -1,8 +1,6 @@
 # Tablioscope
 
-[Try it live](https://xpac27.github.io/tablioscope/)
-
-Single-page score viewer.
+Single-page score viewer, [try it live](https://xpac27.github.io/tablioscope/).
 
 Loads a file from your machine and renders it in the browser using [AlphaTab](https://www.alphatab.net/). The page is geared for quick inspection of exported tabs and scores without installing a full editor.
 
