@@ -1,15 +1,20 @@
 When("I open the home page") do
-  visit "/"
+  visit "/index.html"
 end
 
-Then("the player controls are not visible") do
-  selectors = {
-    play: "[data-testid=\"play-button\"], #play, .play, button#play, button.play",
-    stop: "[data-testid=\"stop-button\"], #stop, .stop, button#stop, button.stop",
-    time: "[data-testid=\"time-info\"], #time-info, .time-info, [data-role=\"time-info\"]"
-  }
+Then("the player controls are disabled") do
+  expect(page).to have_css("#play-pause[disabled]", visible: true)
+  expect(page).to have_css("#stop[disabled]", visible: true)
+  expect(page).to have_css("#player-time[hidden]", visible: :all)
+end
 
-  expect(page).to have_no_css(selectors[:play], visible: true)
-  expect(page).to have_no_css(selectors[:stop], visible: true)
-  expect(page).to have_no_css(selectors[:time], visible: true)
+When("I load the example AlphaTab file") do
+  fixture_path = File.expand_path("../../doc/example_alphatab.atext", __dir__)
+  find(:css, "#file-input", visible: :all).attach_file(fixture_path)
+end
+
+Then("the player controls are visible") do
+  expect(page).to have_css("#play-pause", visible: true)
+  expect(page).to have_css("#stop", visible: true)
+  expect(page).to have_css("#player-time", visible: true)
 end
