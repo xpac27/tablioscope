@@ -1,0 +1,22 @@
+name: Cucumber
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  cucumber:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: Run Cucumber
+        run: bundle exec cucumber
