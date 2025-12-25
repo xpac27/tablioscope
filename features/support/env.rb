@@ -5,7 +5,7 @@ require "rack"
 require "rack/files"
 require "webrick"
 
-public_root = File.expand_path("../../public", __dir__)
+public_root = File.expand_path("../../docs", __dir__)
 
 Capybara.app = Rack::Files.new(public_root)
 Capybara.server = :webrick

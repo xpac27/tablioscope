@@ -218,7 +218,7 @@
         }
       }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.7.1/dist/alphaTab.min.js "></script>
+    <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.7.1/dist/alphaTab.min.js"></script>
   </head>
   <body>
     <main class="page">
@@ -245,7 +245,7 @@
       <div class="alpha-tab" id="alpha-tab"></div>
     </main>
 
-    <script src="jsonToAlphaText.js"></script>
+    <script src="./jsonToAlphaText.js"></script>
     <script>
       const fileInput = document.getElementById('file-input');
       const status = document.getElementById('status');
@@ -272,7 +272,7 @@
       const api = new alphaTab.AlphaTabApi(alphaTabContainer, {
         player: {
           enablePlayer: true,
-          soundFont: "ext/sonivox.sf3",
+          soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.7.1/dist/soundfont/sonivox.sf3",
           scrollElement: alphaTabContainer
         }
       });

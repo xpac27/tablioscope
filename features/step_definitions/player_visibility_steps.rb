@@ -9,7 +9,7 @@ Then("the player controls are disabled") do
 end
 
 When("I load the example AlphaTab file") do
-  fixture_path = File.expand_path("../../doc/example_alphatab.atext", __dir__)
+  fixture_path = File.expand_path("../../documentation/examples/example_alphatab.atext", __dir__)
   find(:css, "#file-input", visible: :all).attach_file(fixture_path)
 end
 

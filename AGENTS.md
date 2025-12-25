@@ -12,14 +12,14 @@ Render structured JSON guitar tabs to ASCII with repeats, tuplets, palm mute / l
 
 ## Default Flow for Changes
 - Implement the code change (usually in `json_to_ascii_tab.rb`); keep defaults (4/4, standard tuning) intact.
-- If behavior/output changes, suggest the required edits to `doc/example.json` accordingly. Wait for the user to confirm the changes.
+- If behavior/output changes, suggest the required edits to `documentation/examples/example.json` accordingly. Wait for the user to confirm the changes.
 - Sync tests with fixtures: update `tests/example_test.rb` to assert new behavior. Consider adding tests and ask the user if you find relevant ones.
 - Run tests: `ruby -Itests tests/example_test.rb` plus other tests from the `tests/` folder.
 - Fix code/fixtures until tests pass.
 - Refresh docs:
   - `README.md` (feature notes, rendered example snippet if output changed)
-  - `doc/json_format-knowledge.md` (spec/semantics)
-  - `doc/format.json.schema` (schema alignment)
+  - `documentation/knowledge/json_format-knowledge.md` (spec/semantics)
+  - `documentation/schema/format.json.schema` (schema alignment)
 - Don't commit, let the user review and commit.
 
 ## Committing Changes
@@ -36,4 +36,3 @@ Render structured JSON guitar tabs to ASCII with repeats, tuplets, palm mute / l
 - ASCII only; keep comments minimal and meaningful.
 - Repeat detection is content-based (canonicalized measures) up to 16 measures.
 - Use `rg` for searching; avoid destructive git commands.
-

@@ -1,5 +1,7 @@
 # JSON → ASCII Guitar Tab Renderer
 
+Demo: https://<user>.github.io/<repo>/
+
 ```text
 +--------------------------------------------+
 | Example Track - Overdriven Guitar (part 0) |
@@ -104,7 +106,7 @@ This is **continuous sustain**, not just a small prefix marker.
 ## Usage
 
 ```bash
-ruby tab_decode.rb --json input.json
+ruby json_to_ascii_tab.rb --json input.json
 ```
 
 Options:
@@ -112,6 +114,18 @@ Options:
 ```bash
 --per-line N    # number of rendered measures per line (default: 8)
 ```
+
+---
+
+## Documentation files
+
+* Knowledge/spec notes: `documentation/knowledge/json_format-knowledge.md`
+* AlphaText notes: `documentation/knowledge/alphatext_format-knowledge.md`
+* Web viewer notes: `documentation/knowledge/index_html-knowledge.md`
+* Example fixtures: `documentation/examples/example.json`, `documentation/examples/example_alphatab.atext`
+* JSON schema: `documentation/schema/format.json.schema`
+* GitHub Pages site: `docs/index.html`
+* Web player soundfont: hosted via jsDelivr (Apache 2.0) at `https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.7.1/dist/soundfont/sonivox.sf3`
 
 ---
 
