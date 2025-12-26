@@ -12,11 +12,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2"
           bundler-cache: true
+
+      - name: Run repeat inference tests
+        run: node extras/tests/repeat_inference_test.js
+
+      - name: Run alphatex repeat inference tests
+        run: node extras/tests/json_to_alphatex_repeat_test.js
 
       - name: Run Cucumber
         run: bundle exec cucumber

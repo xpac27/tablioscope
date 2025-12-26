@@ -1,6 +1,19 @@
 const DEFAULT_TUNING = [64, 59, 55, 50, 45, 40];
 const POWER_OF_TWO_DURATIONS = new Set([1, 2, 4, 8, 16, 32, 64, 128, 256]);
 const TUPLET_CANDIDATES = [3, 5, 6, 7, 9, 10, 12];
+const repeatInference = (() => {
+  if (typeof require !== 'undefined') {
+    try {
+      return require('./repeat_inference');
+    } catch (err) {
+      return null;
+    }
+  }
+  if (typeof window !== 'undefined' && window.repeatInference) {
+    return window.repeatInference;
+  }
+  return null;
+})();
 
 function jsonToAlphaText(raw, options = {}) {
   const score = parseScore(raw);
@@ -24,6 +37,8 @@ function jsonToAlphaText(raw, options = {}) {
 
   let currentSignature = [4, 4];
   let previousNotes = Array(6).fill(false);
+  const measureInfos = [];
+
   score.measures.forEach((measure, measureIndex) => {
     let signatureChanged = false;
     if (measure.signature) {
@@ -33,10 +48,6 @@ function jsonToAlphaText(raw, options = {}) {
         currentSignature = [num, den];
         signatureChanged = true;
       }
-    }
-
-    if (measure.marker?.text) {
-      lines.push(`// ${measure.marker.text}`);
     }
 
     const beats = normalizeBeats(measure, currentSignature, measureIndex, 0);
@@ -54,8 +65,56 @@ function jsonToAlphaText(raw, options = {}) {
       tokens.push(token);
     });
 
-    lines.push(`  ${tokens.join(' ')} |`);
     previousNotes = measurePreviousNotes;
+
+    measureInfos.push({
+      measure,
+      measureIndex,
+      signature: currentSignature,
+      signatureChanged,
+      markerText: measure.marker?.text ?? '',
+      beats,
+      tokens,
+    });
+  });
+
+  const foldResult = inferRepeats(
+    score,
+    measureInfos,
+    tempoMap,
+    options,
+  );
+
+  const repeatMeta = buildRepeatMeta(foldResult.plan);
+  const foldedIndices = foldResult.foldedIndices;
+
+  foldedIndices.forEach((measureIndex, outputIndex) => {
+    const info = measureInfos[measureIndex];
+    if (info.markerText) {
+      lines.push(`// ${info.markerText}`);
+    }
+
+    const meta = [];
+    if (repeatMeta.repeatStarts.has(outputIndex)) {
+      meta.push('\\ro');
+    }
+
+    const voltaPasses = repeatMeta.voltaStarts.get(outputIndex);
+    if (voltaPasses) {
+      meta.push(formatVolta(voltaPasses));
+    }
+
+    if (info.signatureChanged) {
+      meta.push(`\\ts ${info.signature[0]} ${info.signature[1]}`);
+    }
+
+    const repeatTimes = repeatMeta.repeatEnds.get(outputIndex);
+    if (repeatTimes) {
+      meta.push(`\\rc ${repeatTimes}`);
+    }
+
+    const lineTokens = meta.concat(info.tokens);
+    lines.push(`  ${lineTokens.join(' ')} |`);
   });
 
   return lines.join('\n');
@@ -109,6 +168,116 @@ function buildTempoMap(tempo) {
   });
 
   return map;
+}
+
+function inferRepeats(score, measureInfos, tempoMap, options) {
+  const inferEnabled = options.inferRepeats !== false;
+  if (!inferEnabled || !repeatInference || !repeatInference.inferFoldPlan) {
+    return { foldedIndices: [...Array(measureInfos.length).keys()], plan: null };
+  }
+
+  const boundaries = buildBoundaryIds(measureInfos, tempoMap);
+  const fingerprints = measureInfos.map((info) => canonicalFingerprint(info));
+  const adapter = {
+    len: () => measureInfos.length,
+    fingerprint: (i) => fingerprints[i],
+    boundary_id: (i) => boundaries[i],
+    debug_label: (i) => `m${i + 1}`,
+  };
+
+  const maxRepeatLen = Number.isInteger(options.maxRepeatLen)
+    ? options.maxRepeatLen
+    : 16;
+
+  return repeatInference.inferFoldPlan(adapter, { maxRepeatLen });
+}
+
+function buildBoundaryIds(measureInfos, tempoMap) {
+  const boundaries = new Array(measureInfos.length).fill(null);
+  for (let i = 1; i < measureInfos.length; i += 1) {
+    const info = measureInfos[i];
+    if (info.signatureChanged || info.markerText || tempoMap.get(i) !== undefined) {
+      boundaries[i] = 'boundary';
+    }
+  }
+  return boundaries;
+}
+
+function canonicalFingerprint(info) {
+  const voice0 = info.measure.voices?.[0];
+  const canon = {
+    signature: info.signature,
+    voice_rest: !!voice0?.rest,
+    beats: info.beats.map((beat) => canonicalBeat(beat)),
+  };
+  return stableStringify(canon);
+}
+
+function canonicalBeat(beat) {
+  return {
+    duration: beat.duration,
+    rest: !!beat.rest,
+    palmMute: !!beat.palmMute,
+    letRing: !!beat.letRing,
+    tuplet: beat.tuplet,
+    tupletStart: !!beat.tupletStart,
+    tupletStop: !!beat.tupletStop,
+    notes: (beat.notes || []).map((note) => canonicalNote(note)),
+  };
+}
+
+function canonicalNote(note) {
+  return {
+    string: note.string,
+    fret: note.fret,
+    rest: !!note.rest,
+    tie: !!note.tie,
+    hp: !!note.hp,
+    slide: note.slide,
+    ghost: !!note.ghost,
+    dead: !!note.dead,
+  };
+}
+
+function stableStringify(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  }
+  if (value && typeof value === 'object') {
+    const keys = Object.keys(value).sort();
+    const entries = keys.map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`);
+    return `{${entries.join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function buildRepeatMeta(plan) {
+  const repeatStarts = new Set();
+  const repeatEnds = new Map();
+  const voltaStarts = new Map();
+
+  if (!plan || !Array.isArray(plan.repeats)) {
+    return { repeatStarts, repeatEnds, voltaStarts };
+  }
+
+  plan.repeats.forEach((repeat) => {
+    repeatStarts.add(repeat.start);
+    repeatEnds.set(repeat.end, repeat.times || 2);
+    (repeat.voltas || []).forEach((volta) => {
+      voltaStarts.set(volta.start, volta.allowedPasses || []);
+    });
+  });
+
+  return { repeatStarts, repeatEnds, voltaStarts };
+}
+
+function formatVolta(passes) {
+  const normalized = passes.map((v) => Number(v)).filter((v) => Number.isFinite(v));
+  normalized.sort((a, b) => a - b);
+  if (normalized.length <= 1) {
+    return `\\ae ${normalized[0] ?? 1}`;
+  }
+  return `\\ae (${normalized.join(' ')})`;
 }
 
 function validateSignature(signature, measureIndex) {
@@ -346,4 +515,8 @@ function gcd(a, b) {
   return x || 1;
 }
 
-window.jsonToAlphaText = jsonToAlphaText;
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = jsonToAlphaText;
+} else if (typeof window !== 'undefined') {
+  window.jsonToAlphaText = jsonToAlphaText;
+}

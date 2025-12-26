@@ -23,6 +23,8 @@ bundle exec cucumber
 
 `extras/` contains the Ruby conversion scripts and small helpers used for local format experiments. These are optional for the web viewer and can be run directly from the command line if you want to generate or inspect output in the terminal.
 
+The browser `jsonToAlphaText` converter in `docs/` now infers repeats and voltas by default; pass `{ inferRepeats: false }` to disable it when needed.
+
 ## Licenses
 
 - AlphaTab is a third-party library; see https://www.alphatab.net/ for licensing and usage terms.
