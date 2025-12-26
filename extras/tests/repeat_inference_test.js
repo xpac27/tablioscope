@@ -115,11 +115,25 @@ function testBoundaryCapsRepeatCount() {
   assertUnrollMatches(tokens, result);
 }
 
+function testBoundaryCapsRepeatCountDefault() {
+  const tokens = ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A'];
+  const boundaries = [];
+  boundaries[4] = 'tempo';
+  const adapter = makeAdapter(tokens, boundaries);
+  const result = inferFoldPlan(adapter);
+  assert(result.plan);
+  assert.strictEqual(result.plan.repeats.length, 2);
+  assert.strictEqual(result.plan.repeats[0].times, 2);
+  assert.strictEqual(result.plan.repeats[1].times, 2);
+  assertUnrollMatches(tokens, result);
+}
+
 testSimpleRepeat();
 testVolta();
 testBoundaryStopsFold();
 testMultiPassRepeat();
 testMultipleRepeats();
 testBoundaryCapsRepeatCount();
+testBoundaryCapsRepeatCountDefault();
 
 console.log('repeat inference tests: ok');
