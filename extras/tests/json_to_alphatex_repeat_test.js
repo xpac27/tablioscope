@@ -121,10 +121,42 @@ function testLongRestRepeat() {
   assertIncludes(output, '\\rc 92');
 }
 
+function testTempoSegmentedRestRepeats() {
+  const measures = [
+    ...Array.from({ length: 92 }, () => makeRestMeasure()),
+    ...Array.from({ length: 3 }, () => makeRestMeasure()),
+    ...Array.from({ length: 96 }, () => makeRestMeasure()),
+    ...Array.from({ length: 4 }, () => makeRestMeasure()),
+  ];
+  const score = {
+    measures,
+    automations: {
+      tempo: [
+        { measure: 0, position: 0, bpm: 120 },
+        { measure: 92, position: 0, bpm: 110 },
+        { measure: 95, position: 0, bpm: 90 },
+        { measure: 191, position: 0, bpm: 80 },
+      ],
+    },
+  };
+  const output = jsonToAlphaText(score);
+  const repeatStarts = output.split('\\ro').length - 1;
+  const repeatEnds = output.split('\\rc').length - 1;
+  const voltas = output.split('\\ae').length - 1;
+  assert.strictEqual(repeatStarts, 4);
+  assert.strictEqual(repeatEnds, 4);
+  assert.strictEqual(voltas, 0);
+  assertIncludes(output, '\\rc 92');
+  assertIncludes(output, '\\rc 3');
+  assertIncludes(output, '\\rc 96');
+  assertIncludes(output, '\\rc 4');
+}
+
 testSimpleRepeat();
 testVoltaRepeat();
 testMultiPassRepeat();
 testMultipleRepeats();
 testLongRestRepeat();
+testTempoSegmentedRestRepeats();
 
 console.log('alphatex repeat inference tests: ok');

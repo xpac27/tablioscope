@@ -89,21 +89,25 @@ function findSimpleRepeats(fps, boundaries, opts) {
   const candidates = [];
   const total = fps.length;
   const maxLen = Math.min(opts.maxRepeatLen, total);
+  const nextBoundary = buildNextBoundary(boundaries);
 
   for (let start = 0; start < total; start += 1) {
+    const boundaryIndex = nextBoundary[start + 1];
+    const maxSpanEnd = boundaryIndex !== null ? boundaryIndex - 1 : total - 1;
+
     for (let len = opts.minRepeatLen; len <= maxLen; len += 1) {
       const secondStart = start + len;
-      if (secondStart + len - 1 >= total) break;
+      if (secondStart + len - 1 > maxSpanEnd) break;
       if (!segmentsEqual(fps, start, secondStart, len)) continue;
 
+      const maxCount = Math.floor((maxSpanEnd - start + 1) / len);
       let count = 2;
-      while (start + count * len <= total && segmentsEqual(fps, start, start + (count - 1) * len, len)) {
+      while (count <= maxCount && segmentsEqual(fps, start, start + (count - 1) * len, len)) {
         count += 1;
       }
       count -= 1;
       const spanEnd = start + len * count - 1;
       if (count < 2) continue;
-      if (spanHasBoundary(boundaries, start, spanEnd)) continue;
 
       const skipStart = start + len;
       const skipEnd = spanEnd;
@@ -373,6 +377,19 @@ function spanHasBoundary(boundaries, start, end) {
     if (boundaries[i] !== null && boundaries[i] !== undefined) return true;
   }
   return false;
+}
+
+function buildNextBoundary(boundaries) {
+  const next = new Array(boundaries.length + 1).fill(null);
+  let nearest = null;
+  for (let i = boundaries.length - 1; i >= 0; i -= 1) {
+    if (boundaries[i] !== null && boundaries[i] !== undefined) {
+      nearest = i;
+    }
+    next[i] = nearest;
+  }
+  next[boundaries.length] = null;
+  return next;
 }
 
 function arraysEqual(a, b) {
