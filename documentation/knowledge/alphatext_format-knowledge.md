@@ -75,14 +75,9 @@ String is 1-based in AlphaText (string 1 is the highest string).
 
 ### Note Properties (used here)
 
-- `g` ghost note
-- `h` hammer-on / pull-off
-- `pm` palm mute
-- `lr` let ring (note: AlphaTab's AlphaText parser rejects `lr` in practice; this converter omits it)
-
-Properties are attached in braces after the note:
-
-`3.2{pm}` or `(3.2{pm} 2.3{pm})`
+The JavaScript converter currently omits note-level properties (`g`, `h`, tie markers, etc.)
+to avoid AlphaText parser errors with note-duration tokens. Palm mute is emitted as a beat
+property; let ring is omitted.
 
 ### Ties
 

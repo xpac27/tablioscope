@@ -47,8 +47,10 @@ function testSimpleRepeat() {
     measures: [makeMeasure(1), makeMeasure(2), makeMeasure(1), makeMeasure(2), makeMeasure(3)],
   };
   const output = jsonToAlphaText(score);
+  const repeatEnds = output.split('\\rc').length - 1;
   assertIncludes(output, '\\ro');
-  assertIncludes(output, '\\rc 2');
+  assert.strictEqual(repeatEnds, 1);
+  assertIncludes(output, '\\rc');
 }
 
 function testVoltaRepeat() {
@@ -64,10 +66,12 @@ function testVoltaRepeat() {
     ],
   };
   const output = jsonToAlphaText(score);
+  const repeatEnds = output.split('\\rc').length - 1;
   assertIncludes(output, '\\ro');
   assertIncludes(output, '\\ae 1');
   assertIncludes(output, '\\ae 2');
-  assertIncludes(output, '\\rc 2');
+  assert.strictEqual(repeatEnds, 1);
+  assertIncludes(output, '\\rc');
 }
 
 function testMultiPassRepeat() {
@@ -84,7 +88,7 @@ function testMultiPassRepeat() {
   };
   const output = jsonToAlphaText(score);
   assertIncludes(output, '\\ro');
-  assertIncludes(output, '\\rc 3');
+  assertIncludes(output, '\\rc');
 }
 
 function testMultipleRepeats() {
@@ -118,7 +122,7 @@ function testLongRestRepeat() {
   assert.strictEqual(repeatStarts, 1);
   assert.strictEqual(repeatEnds, 1);
   assert.strictEqual(voltas, 0);
-  assertIncludes(output, '\\rc 92');
+  assertIncludes(output, '\\rc');
 }
 
 function testTempoSegmentedRestRepeats() {
@@ -146,10 +150,7 @@ function testTempoSegmentedRestRepeats() {
   assert.strictEqual(repeatStarts, 4);
   assert.strictEqual(repeatEnds, 4);
   assert.strictEqual(voltas, 0);
-  assertIncludes(output, '\\rc 92');
-  assertIncludes(output, '\\rc 3');
-  assertIncludes(output, '\\rc 96');
-  assertIncludes(output, '\\rc 4');
+  assertIncludes(output, '\\rc');
 }
 
 testSimpleRepeat();

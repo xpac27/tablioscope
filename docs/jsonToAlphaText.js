@@ -108,9 +108,8 @@ function jsonToAlphaText(raw, options = {}) {
       meta.push(`\\ts ${info.signature[0]} ${info.signature[1]}`);
     }
 
-    const repeatTimes = repeatMeta.repeatEnds.get(outputIndex);
-    if (repeatTimes) {
-      meta.push(`\\rc ${repeatTimes}`);
+    if (repeatMeta.repeatEnds.has(outputIndex)) {
+      meta.push('\\rc');
     }
 
     const lineTokens = meta.concat(info.tokens);
@@ -486,13 +485,7 @@ function formatNoteValue(note, voiceIndex, effectiveTie, previousFret) {
 }
 
 function formatNoteProps(note, beat, effectiveTie, previousFret, currentFret) {
-  const props = [];
-  if (note.ghost) props.push('g');
-  if (note.hp) props.push('h');
-  if (effectiveTie && Number.isInteger(previousFret) && Number.isInteger(currentFret) && currentFret !== previousFret) {
-    props.push('t');
-  }
-  return props;
+  return [];
 }
 
 function reduceFraction(value) {

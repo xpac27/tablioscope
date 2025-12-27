@@ -64,4 +64,30 @@ function testTieUsesNoteProp() {
 
 testTieUsesNoteProp();
 
+function testNotePropsOmitted() {
+  const score = {
+    measures: [
+      {
+        signature: [4, 4],
+        voices: [
+          {
+            beats: [
+              { duration: [1, 4], notes: [{ string: 0, fret: 3, ghost: true, hp: true }] },
+              { duration: [1, 4], notes: [{ string: 0, fret: 3, ghost: true }] },
+              { duration: [1, 4], notes: [{ string: 0, fret: 3, hp: true }] },
+              { duration: [1, 4], notes: [{ string: 0, fret: 3 }] },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  const output = jsonToAlphaText(score);
+  assert(!output.includes('{g}'), output);
+  assert(!output.includes('{h}'), output);
+}
+
+testNotePropsOmitted();
+
 console.log('alphatex beat-level props tests: ok');
