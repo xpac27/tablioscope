@@ -42,13 +42,20 @@ function assertIncludes(output, needle) {
   );
 }
 
+function assertMatches(output, pattern) {
+  const rcIndex = output.indexOf('\\rc ');
+  assert(rcIndex >= 0, `Expected output to include \\rc <count>\\n${output}`);
+  const after = output.slice(rcIndex + 4);
+  assert(/^[0-9]+/.test(after), `Expected repeat count after \\rc\\n${output}`);
+}
+
 function testSimpleRepeat() {
   const score = {
     measures: [makeMeasure(1), makeMeasure(2), makeMeasure(1), makeMeasure(2), makeMeasure(3)],
   };
   const output = jsonToAlphaText(score);
   assertIncludes(output, '\\ro');
-  assertIncludes(output, '\\rc');
+  assertMatches(output);
 }
 
 function testVoltaRepeat() {
@@ -67,7 +74,7 @@ function testVoltaRepeat() {
   assertIncludes(output, '\\ro');
   assertIncludes(output, '\\ae 1');
   assertIncludes(output, '\\ae 2');
-  assertIncludes(output, '\\rc');
+  assertMatches(output);
 }
 
 function testMultiPassRepeat() {
@@ -84,7 +91,7 @@ function testMultiPassRepeat() {
   };
   const output = jsonToAlphaText(score);
   assertIncludes(output, '\\ro');
-  assertIncludes(output, '\\rc');
+  assertMatches(output);
 }
 
 function testMultipleRepeats() {
@@ -118,7 +125,7 @@ function testLongRestRepeat() {
   assert.strictEqual(repeatStarts, 1);
   assert.strictEqual(repeatEnds, 1);
   assert.strictEqual(voltas, 0);
-  assertIncludes(output, '\\rc');
+  assertMatches(output);
 }
 
 function testTempoSegmentedRestRepeats() {
@@ -146,7 +153,7 @@ function testTempoSegmentedRestRepeats() {
   assert.strictEqual(repeatStarts, 4);
   assert.strictEqual(repeatEnds, 4);
   assert.strictEqual(voltas, 0);
-  assertIncludes(output, '\\rc');
+  assertMatches(output);
 }
 
 testSimpleRepeat();

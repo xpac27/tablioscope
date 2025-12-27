@@ -1,5 +1,26 @@
 When("I open the home page") do
   visit "/index.html"
+  page.execute_script(<<~JS)
+    window.__consoleMessages = [];
+    if (!window.__consoleCaptureInstalled) {
+      window.__consoleCaptureInstalled = true;
+      const record = (level, args) => {
+        try {
+          const text = Array.from(args).map((arg) => {
+            if (typeof arg === 'string') return arg;
+            try { return JSON.stringify(arg); } catch (e) { return String(arg); }
+          }).join(' ');
+          window.__consoleMessages.push(`[${level}] ${text}`);
+        } catch (e) {
+          window.__consoleMessages.push(`[${level}] <unserializable>`);
+        }
+      };
+      const originalError = console.error;
+      const originalWarn = console.warn;
+      console.error = function(...args) { record('error', args); originalError.apply(console, args); };
+      console.warn = function(...args) { record('warn', args); originalWarn.apply(console, args); };
+    }
+  JS
 end
 
 Then("the player controls are disabled") do
@@ -46,12 +67,5 @@ Then("there are no AlphaTab errors") do
 end
 
 def fetch_console_messages
-  browser = page.driver.browser
-  if browser.respond_to?(:console_messages)
-    browser.console_messages.map do |entry|
-      entry.respond_to?(:message) ? entry.message : entry[:message]
-    end.compact
-  else
-    []
-  end
+  page.evaluate_script("window.__consoleMessages || []")
 end

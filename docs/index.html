@@ -291,9 +291,49 @@
         playerTime.hidden = false;
       });
 
+      function formatDiagnostics(diagnostics) {
+        if (!Array.isArray(diagnostics) || diagnostics.length === 0) return '';
+        const lines = diagnostics.map((diag) => {
+          if (!diag) return 'Unknown diagnostic.';
+          const message = diag.message || diag.text || 'Unknown diagnostic.';
+          const line = Number.isInteger(diag.line) ? diag.line + 1 : null;
+          const column = Number.isInteger(diag.column) ? diag.column + 1 : null;
+          if (line !== null && column !== null) return `${message} (line ${line}, col ${column})`;
+          if (line !== null) return `${message} (line ${line})`;
+          return message;
+        });
+        return lines.join('; ');
+      }
+
+      function describeLoadError(err) {
+        if (!err) return 'Unknown error.';
+        if (typeof err === 'string') return err;
+
+        const diagnosticText =
+          formatDiagnostics(err.diagnostics) ||
+          formatDiagnostics(err.error && err.error.diagnostics) ||
+          formatDiagnostics(err.inner && err.inner.diagnostics);
+
+        const baseMessage =
+          err.message ||
+          (err.error && err.error.message) ||
+          '';
+
+        if (baseMessage && diagnosticText) return `${baseMessage} ${diagnosticText}`;
+        if (baseMessage) return baseMessage;
+        if (diagnosticText) return diagnosticText;
+
+        try {
+          return JSON.stringify(err);
+        } catch {
+          return 'Unknown error.';
+        }
+      }
+
       api.error.on((err) => {
         console.error(err);
-        status.textContent = "Unable to read this file. Check its format.";
+        const details = describeLoadError(err);
+        status.textContent = `Unable to read this file: ${details} Expected Guitar Pro, PowerTab, MusicXML, AlphaText, or score-JSON.`;
         status.hidden = false;
       });
 
@@ -397,7 +437,7 @@
             if (isJson) {
               const parsed = JSON.parse(content);
               const title = titleFromFilename(fileName);
-              const alphatex = window.jsonToAlphaText(parsed, { title });
+              const alphatex = window.jsonToAlphaText(parsed, { title, inferRepeats: false });
               api.tex(alphatex);
             } else {
               api.tex(content);

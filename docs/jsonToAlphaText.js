@@ -113,8 +113,9 @@ function jsonToAlphaText(raw, options = {}) {
       meta.push(`\\tempo ${info.tempo}`);
     }
 
-    if (repeatMeta.repeatEnds.has(outputIndex)) {
-      meta.push('\\rc');
+    const repeatTimes = repeatMeta.repeatEnds.get(outputIndex);
+    if (repeatTimes) {
+      meta.push(`\\rc ${repeatTimes}`);
     }
 
     const lineTokens = meta.concat(info.tokens);
