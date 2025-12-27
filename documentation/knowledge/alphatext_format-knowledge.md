@@ -86,12 +86,8 @@ Properties are attached in braces after the note:
 
 ### Ties
 
-Tied notes are rendered using the note property `t`:
-
-`3.2{t}`
-
-AlphaTab infers the tie target from the previous note on the same string.
-This converter only emits `{t}` when a prior note exists on the same string.
+This converter currently renders tied notes as repeated fret values (no explicit tie markers),
+since AlphaTab rejects both `-` and `{t}` in the JSON-derived output for these files.
 
 ## Comments
 

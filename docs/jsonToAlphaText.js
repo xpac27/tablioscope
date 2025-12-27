@@ -465,7 +465,7 @@ function formatBeatContent(beat, previousFrets, voiceIndex) {
     } else if (effectiveTie && Number.isInteger(prevFret)) {
       nextFrets[stringIndex] = prevFret;
     }
-    const props = formatNoteProps(note, beat, effectiveTie);
+    const props = formatNoteProps(note, beat, effectiveTie, prevFret, note.fret);
     return props.length > 0 ? `${value}.${stringIndex + 1}{${props.join(' ')}}` : `${value}.${stringIndex + 1}`;
   });
 
@@ -485,11 +485,13 @@ function formatNoteValue(note, voiceIndex, effectiveTie, previousFret) {
   return String(note.fret);
 }
 
-function formatNoteProps(note, beat, effectiveTie) {
+function formatNoteProps(note, beat, effectiveTie, previousFret, currentFret) {
   const props = [];
   if (note.ghost) props.push('g');
   if (note.hp) props.push('h');
-  if (effectiveTie) props.push('t');
+  if (effectiveTie && Number.isInteger(previousFret) && Number.isInteger(currentFret) && currentFret !== previousFret) {
+    props.push('t');
+  }
   return props;
 }
 

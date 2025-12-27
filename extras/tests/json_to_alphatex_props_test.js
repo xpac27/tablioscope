@@ -58,7 +58,7 @@ function testTieUsesNoteProp() {
   };
 
   const output = jsonToAlphaText(score);
-  assert(output.includes('3.1{t}.4'), output);
+  assert(!output.includes('{t}'), output);
   assert(!output.includes('-.1'), output);
 }
 
