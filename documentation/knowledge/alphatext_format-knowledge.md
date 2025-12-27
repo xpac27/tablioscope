@@ -26,7 +26,7 @@ Example:
 - `\tuning (E4 B3 G3 D3 A2 E2)` defines string tuning (note names with octave).
 - `\ts N D` sets time signature (e.g. `\ts 4 4`) and can be placed before the first beat of a bar.
 - `\ro` starts a repeat section (repeat open).
-- `\rc N` ends a repeat section and sets the repeat count (e.g. `\rc 2`).
+- `\rc` ends a repeat section. AlphaTab rejects repeat counts, so the converter omits `N`.
 - `\ae (N ...)` marks the bar to be played on the listed repeat endings (alternate endings).
 
 Example:
@@ -62,11 +62,7 @@ Example: `3.2.4 {d}` for a dotted quarter.
 
 ### Tempo
 
-Tempo changes are encoded as beat properties:
-
-`3.2.4 {tempo 120}`
-
-In this repo, tempo is only attached to beats at measure start.
+Tempo changes are encoded using `\tempo N` at the start of a measure.
 
 ## Notes
 
@@ -76,8 +72,7 @@ String is 1-based in AlphaText (string 1 is the highest string).
 ### Note Properties (used here)
 
 The JavaScript converter currently omits note-level properties (`g`, `h`, tie markers, etc.)
-to avoid AlphaText parser errors with note-duration tokens. Palm mute is emitted as a beat
-property; let ring is omitted.
+and beat-level palm mute/let ring to avoid AlphaText parser errors with note-duration tokens.
 
 ### Ties
 

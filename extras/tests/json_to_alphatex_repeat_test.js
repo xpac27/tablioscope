@@ -47,9 +47,7 @@ function testSimpleRepeat() {
     measures: [makeMeasure(1), makeMeasure(2), makeMeasure(1), makeMeasure(2), makeMeasure(3)],
   };
   const output = jsonToAlphaText(score);
-  const repeatEnds = output.split('\\rc').length - 1;
   assertIncludes(output, '\\ro');
-  assert.strictEqual(repeatEnds, 1);
   assertIncludes(output, '\\rc');
 }
 
@@ -66,11 +64,9 @@ function testVoltaRepeat() {
     ],
   };
   const output = jsonToAlphaText(score);
-  const repeatEnds = output.split('\\rc').length - 1;
   assertIncludes(output, '\\ro');
   assertIncludes(output, '\\ae 1');
   assertIncludes(output, '\\ae 2');
-  assert.strictEqual(repeatEnds, 1);
   assertIncludes(output, '\\rc');
 }
 

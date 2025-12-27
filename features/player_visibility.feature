@@ -8,3 +8,8 @@ Feature: Player UI visibility
     When I open the home page
     And I load the example AlphaTab file
     Then the player controls are visible
+
+  Scenario: Nirvana JSON loads without AlphaTab errors
+    When I open the home page
+    And I load the Nirvana JSON file
+    Then there are no AlphaTab errors

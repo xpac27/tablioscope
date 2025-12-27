@@ -58,9 +58,9 @@ function jsonToAlphaText(raw, options = {}) {
     }
 
     let measurePreviousFrets = previousFrets;
-    beats.forEach((beat, beatIndex) => {
-      const beatTempo = beatIndex === 0 ? tempoMap.get(measureIndex) : undefined;
-      const { token, nextFrets } = formatBeat(beat, measurePreviousFrets, beatTempo, 0);
+    const tempo = tempoMap.get(measureIndex);
+    beats.forEach((beat) => {
+      const { token, nextFrets } = formatBeat(beat, measurePreviousFrets, 0);
       measurePreviousFrets = nextFrets;
       tokens.push(token);
     });
@@ -74,6 +74,7 @@ function jsonToAlphaText(raw, options = {}) {
       signatureChanged,
       markerText: measure.marker?.text ?? '',
       beats,
+      tempo,
       tokens,
     });
   });
@@ -106,6 +107,10 @@ function jsonToAlphaText(raw, options = {}) {
 
     if (info.signatureChanged) {
       meta.push(`\\ts ${info.signature[0]} ${info.signature[1]}`);
+    }
+
+    if (info.tempo !== undefined) {
+      meta.push(`\\tempo ${info.tempo}`);
     }
 
     if (repeatMeta.repeatEnds.has(outputIndex)) {
@@ -348,10 +353,8 @@ function beatDuration(beat, measureIndex, voiceIndex) {
   return reduceFraction({ n, d });
 }
 
-function formatBeat(beat, previousFrets, tempo, voiceIndex) {
+function formatBeat(beat, previousFrets, voiceIndex) {
   const props = [];
-  if (tempo !== undefined) props.push(`tempo ${tempo}`);
-  if (beat.palmMute) props.push('pm');
 
   const dots = beat.dots ?? 0;
   if (dots >= 2) {
@@ -464,7 +467,7 @@ function formatBeatContent(beat, previousFrets, voiceIndex) {
     } else if (effectiveTie && Number.isInteger(prevFret)) {
       nextFrets[stringIndex] = prevFret;
     }
-    const props = formatNoteProps(note, beat, effectiveTie, prevFret, note.fret);
+    const props = formatNoteProps(note, beat);
     return props.length > 0 ? `${value}.${stringIndex + 1}{${props.join(' ')}}` : `${value}.${stringIndex + 1}`;
   });
 
@@ -484,7 +487,7 @@ function formatNoteValue(note, voiceIndex, effectiveTie, previousFret) {
   return String(note.fret);
 }
 
-function formatNoteProps(note, beat, effectiveTie, previousFret, currentFret) {
+function formatNoteProps(note, beat) {
   return [];
 }
 

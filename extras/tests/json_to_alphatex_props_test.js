@@ -23,13 +23,11 @@ function testBeatLevelProps() {
   };
 
   const output = jsonToAlphaText(score);
-  assert(output.includes('3.1.4 {pm}'), output);
+  assert(!output.includes('{pm}'), output);
   assert(!output.includes('3.1{'), output);
 }
 
-testBeatLevelProps();
-
-function testTieUsesNoteProp() {
+function testTieUsesRepeatedFret() {
   const score = {
     measures: [
       {
@@ -62,8 +60,6 @@ function testTieUsesNoteProp() {
   assert(!output.includes('-.1'), output);
 }
 
-testTieUsesNoteProp();
-
 function testNotePropsOmitted() {
   const score = {
     measures: [
@@ -88,6 +84,8 @@ function testNotePropsOmitted() {
   assert(!output.includes('{h}'), output);
 }
 
+testBeatLevelProps();
+testTieUsesRepeatedFret();
 testNotePropsOmitted();
 
 console.log('alphatex beat-level props tests: ok');
